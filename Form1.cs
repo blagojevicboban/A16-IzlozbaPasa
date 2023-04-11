@@ -320,7 +320,6 @@ namespace A16
                 cmd.Dispose();
             }
         }
-        // delete from table KATEGORIJA
 
         private void buttonObrisi_Click(object sender, EventArgs e)
         {

@@ -55,7 +55,9 @@ namespace A16
         {
             SqlCommand cmd = new SqlCommand();
             cmd.Connection = conn;
-            cmd.CommandText = "SELECT IzlozbaID, CONCAT(IzlozbaID,' - ',Mesto,' - ', CONVERT(VARCHAR(10),Datum,105)) AS Naziv FROM Izlozba";
+            cmd.CommandText = "SELECT IzlozbaID, " +
+                "CONCAT(IzlozbaID,' - ',Mesto,' - ', CONVERT(VARCHAR(10),Datum,105)) " +
+                "AS Naziv FROM Izlozba";
             SqlDataAdapter da = new SqlDataAdapter(cmd);
             DataTable dtc = new DataTable();
             try

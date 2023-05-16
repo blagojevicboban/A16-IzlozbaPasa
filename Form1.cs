@@ -183,9 +183,9 @@ namespace BLOKA16
             }
         }
 
-        private void buttonPrikazi_Click(object sender, EventArgs e)
+        private void popuniUDgv()
         {
-            SqlCommand cmd = new SqlCommand("select k.KategorijaID as 'Sifra', k.Naziv as 'Naziv Kategorije',COUNT(*) as 'Broj pasa' from Rezultat as r, Kategorija as k where r.KategorijaID=r.KategorijaID and IzlozbaID=@Izlozba group by k.KategorijaID, k.Naziv",conn);
+            SqlCommand cmd = new SqlCommand("select k.KategorijaID as 'Sifra', k.Naziv as 'Naziv Kategorije',COUNT(*) as 'Broj pasa' from Rezultat as r, Kategorija as k where r.KategorijaID=r.KategorijaID and IzlozbaID=@Izlozba group by k.KategorijaID, k.Naziv", conn);
             cmd.Parameters.AddWithValue("@Izlozba", comboBoxizlozba1.SelectedValue);
             SqlDataAdapter da = new SqlDataAdapter(cmd);
             DataTable dt = new DataTable();
@@ -209,6 +209,9 @@ namespace BLOKA16
                 da.Dispose();
                 cmd.Dispose();
             }
+        }
+        private void popuniLabele()
+        {
             SqlCommand cmd1 = new SqlCommand("select count(*) from Rezultat where IzlozbaID=@Izlozba", conn);
             SqlCommand cmd2 = new SqlCommand("select count(*) from Rezultat where IzlozbaID=@Izlozba and LEN(Napomena)>0", conn);
             cmd1.Parameters.AddWithValue("@Izlozba", comboBoxizlozba1.SelectedValue);
@@ -232,6 +235,12 @@ namespace BLOKA16
                 conn.Close();
             }
 
+        }
+        private void buttonPrikazi_Click(object sender, EventArgs e)
+        {
+
+            popuniLabele();
+            popuniUDgv();
 
         }
 

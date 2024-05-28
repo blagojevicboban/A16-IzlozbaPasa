@@ -21,201 +21,183 @@ namespace BLOKA16
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            PopuniPas();
-            PopuniKategoriju();
-            PopuniIzlozba();
-            PopuniIzlozba1();
+            PopuniComboPas();
+            PopuniComboIzlozba();
+            PopuniComboKategorija();
+            PopuniKategorije();
+            richTextBox1.LoadFile(@"../../A16.rtf");
         }
-        private void PopuniPas()
+        private void PopuniComboPas()
         {
-            SqlCommand cmd = new SqlCommand("SELECT PasID, CONCAT(PasID, '-',Ime) as PasIme from Pas", conn);
-            SqlDataAdapter da=new SqlDataAdapter(cmd);
-            DataTable dt = new DataTable();
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.CommandText = "SELECT PasID, CONCAT(PasId,' - ',Ime) AS ImePsa FROM Pas";
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dtc = new DataTable();
             try
             {
-                da.Fill(dt);
-                comboBoxPas.DataSource = dt;
-                comboBoxPas.DisplayMember = "PasIme";
+                da.Fill(dtc);
+                comboBoxPas.DataSource = dtc;
+                comboBoxPas.DisplayMember = "ImePsa";
                 comboBoxPas.ValueMember = "PasID";
                 comboBoxPas.SelectedIndex = 0;
             }
-            catch (Exception)
+            catch
             {
-
-                MessageBox.Show("Doslo je do greske");
+                MessageBox.Show("Doslo je do greške:");
             }
-            finally{
-                cmd.Dispose();
+            finally
+            {
                 da.Dispose();
+                cmd.Dispose();
             }
         }
-        private void PopuniKategoriju()
+        private void PopuniComboIzlozba()
         {
-            SqlCommand cmd = new SqlCommand("SELECT KategorijaID, CONCAT(KategorijaID, '-',Naziv) as KategorijaIme from Kategorija", conn);
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.CommandText = "SELECT IzlozbaID, CONCAT(IzlozbaID,' - ',Mesto,' - ', CONVERT(VARCHAR(10),Datum,105)) AS Naziv FROM Izlozba";
             SqlDataAdapter da = new SqlDataAdapter(cmd);
-            DataTable dt = new DataTable();
+            DataTable dtc = new DataTable();
             try
             {
-                da.Fill(dt);
-                comboBoxKategorija.DataSource = dt;
-                comboBoxKategorija.DisplayMember = "KategorijaIme";
+                da.Fill(dtc);
+                comboBoxIzlozba.DataSource = dtc;
+                comboBoxIzlozba.DisplayMember = "Naziv";
+                comboBoxIzlozba.ValueMember = "IzlozbaID";
+                comboBoxIzlozba2.DataSource = dtc;
+                comboBoxIzlozba2.DisplayMember = "Naziv";
+                comboBoxIzlozba2.ValueMember = "IzlozbaID";
+            }
+            catch
+            {
+                MessageBox.Show("Doslo je do greške:");
+            }
+            finally
+            {
+                da.Dispose();
+                cmd.Dispose();
+            }
+        }
+        private void PopuniComboKategorija()
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.CommandText = "SELECT KategorijaID, CONCAT(KategorijaID,' - ',Naziv) AS ImeKategorije FROM Kategorija";
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dtc = new DataTable();
+            try
+            {
+                da.Fill(dtc);
+                comboBoxKategorija.DataSource = dtc;
+                comboBoxKategorija.DisplayMember = "ImeKategorije";
                 comboBoxKategorija.ValueMember = "KategorijaID";
                 comboBoxKategorija.SelectedIndex = 0;
             }
-            catch (Exception)
+            catch
             {
-
-                MessageBox.Show("Doslo je do greske");
+                MessageBox.Show("Doslo je do greške:");
             }
             finally
             {
-                cmd.Dispose();
                 da.Dispose();
+                cmd.Dispose();
             }
         }
-        private void PopuniIzlozba()
+
+        private void button1_Click(object sender, EventArgs e)
         {
+            if (comboBoxPas.Text == "" || comboBoxIzlozba.Text == "" || comboBoxKategorija.Text == "")
+            {
+                MessageBox.Show("Popunite podatke");
+                return;
+            }
+            // provera da li prijava vec postoji
+            string sqlProvera = "SELECT * FROM Rezultat " +
+                "WHERE IzlozbaID=@Izlozba " +
+                "AND KategorijaID=@Kategorija " +
+                "AND PasID=@Pas";
+            SqlCommand cmdProvera = new SqlCommand(sqlProvera, conn);
+            cmdProvera.Parameters.AddWithValue("@Izlozba", comboBoxIzlozba.SelectedValue);
+            cmdProvera.Parameters.AddWithValue("@Kategorija", comboBoxKategorija.SelectedValue);
+            cmdProvera.Parameters.AddWithValue("@Pas", comboBoxPas.SelectedValue);
+            SqlDataAdapter dap = new SqlDataAdapter(cmdProvera);
+            DataTable dtp = new DataTable();
+            try
+            {
+                dap.Fill(dtp);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Greska" + ex.Message);
+            }
+            if (dtp.Rows.Count > 0)
+            {
+                MessageBox.Show("Pas je vec prijavljen!");
+                return;
+            }
            
-            SqlCommand cmd = new SqlCommand("SELECT IzlozbaID, CONCAT(IzlozbaID, '-',Mesto,'-',FORMAT(Datum, 'dd.MM.yyyy')) as IzlozbaIme from Izlozba where DATEDIFF(hour, Datum,SYSDATETIME())>48", conn);
-            SqlDataAdapter da = new SqlDataAdapter(cmd);
-            DataTable dt = new DataTable();
             try
             {
-                da.Fill(dt);
-                comboBoxIzlozba.DataSource = dt;
-                comboBoxIzlozba.DisplayMember = "IzlozbaIme";
-                comboBoxIzlozba.ValueMember = "IzlozbaID";
-                comboBoxIzlozba.SelectedIndex = 0;
-                
+                SqlCommand command = new SqlCommand("INSERT INTO Rezultat(IzlozbaID, KategorijaID, PasID) VALUES(@Izlozba, @Kategorija, @Pas)", conn);
+                command.Parameters.AddWithValue("@Izlozba", comboBoxIzlozba.SelectedValue);
+                command.Parameters.AddWithValue("@Kategorija", comboBoxKategorija.SelectedValue);
+                command.Parameters.AddWithValue("@Pas", comboBoxPas.SelectedValue);
+                SqlDataAdapter da = new SqlDataAdapter(command);
+                DataTable dtc = new DataTable();
+                da.Fill(dtc);
+                MessageBox.Show("Uspešan unos");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                MessageBox.Show("Doslo je do greske");
-            }
-            finally
-            {
-                cmd.Dispose();
-                da.Dispose();
-            }
-        }
-        private void PopuniIzlozba1()
-        {
-
-            SqlCommand cmd = new SqlCommand("SELECT IzlozbaID, CONCAT(IzlozbaID, '-',Mesto,'-',FORMAT(Datum, 'dd.MM.yyyy')) as IzlozbaIme from Izlozba where  Datum<SYSDATETIME()", conn);
-            SqlDataAdapter da = new SqlDataAdapter(cmd);
-            DataTable dt = new DataTable();
-            try
-            {
-                da.Fill(dt);
-                
-                comboBoxizlozba1.DataSource = dt;
-                comboBoxizlozba1.DisplayMember = "IzlozbaIme";
-                comboBoxizlozba1.ValueMember = "IzlozbaID";
-                comboBoxizlozba1.SelectedIndex = 0;
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show("Doslo je do greske");
-            }
-            finally
-            {
-                cmd.Dispose();
-                da.Dispose();
+                MessageBox.Show(ex.Message);
             }
         }
 
-        private void buttonZATVORI_Click(object sender, EventArgs e)
+        private void button2_Click(object sender, EventArgs e)
         {
             this.Close();
         }
 
-        private void buttonizadji1_Click(object sender, EventArgs e)
+        private void buttonPrikazi_Click(object sender, EventArgs e)
         {
-            this.Close();
-        }
-
-        private void buttonPrijava_Click(object sender, EventArgs e)
-        {
-            if (comboBoxPas.Text == "" || comboBoxIzlozba.Text=="" || comboBoxKategorija.Text == "")
-            {
-                MessageBox.Show("Popunite sve podatke");
-                return;
-            }
-            SqlCommand cmd = new SqlCommand("select * from Rezultat where IzlozbaID=@Izlozba and KategorijaID=@Kategorija and PasID=@Pas", conn);
-            cmd.Parameters.AddWithValue("@Izlozba", comboBoxIzlozba.SelectedValue);
-            cmd.Parameters.AddWithValue("@Kategorija", comboBoxKategorija.SelectedValue);
-            cmd.Parameters.AddWithValue("@Pas", comboBoxPas.SelectedValue);
-            SqlDataAdapter da=new SqlDataAdapter(cmd);
+            string sqlupit = "SELECT Kategorija.KategorijaID as Sifra, " +
+                                     "Kategorija.Naziv as Naziv_Kategorije, " +
+                                     "COUNT(*) as BrojPasa " +
+                            "FROM  Rezultat " +
+                            "INNER JOIN Kategorija ON Rezultat.KategorijaID = Kategorija.KategorijaID " +
+                            "WHERE IzlozbaID=@izlId " +
+                            "GROUP BY Kategorija.KategorijaID, Kategorija.Naziv";
+            SqlCommand cmd = new SqlCommand(sqlupit, conn);
+            cmd.Parameters.AddWithValue("@izlId", comboBoxIzlozba2.SelectedValue);
+            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
             DataTable dt = new DataTable();
             try
             {
-                da.Fill(dt);
-
-
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show("Doslo je do greske");
-            }
-            if(dt.Rows.Count > 0)
-            {
-                MessageBox.Show("Pas je vec prijavljen");
-                return;
-            }
-            try
-            {
-                SqlCommand cmd1 = new SqlCommand("insert into Rezultat(IzlozbaID, KategorijaID, PasID) values (@Izlozba, @Kategorija, @Pas) ",conn);
-                cmd1.Parameters.AddWithValue("@Izlozba", comboBoxIzlozba.SelectedValue);
-                cmd1.Parameters.AddWithValue("@Kategorija", comboBoxKategorija.SelectedValue);
-                cmd1.Parameters.AddWithValue("@Pas", comboBoxPas.SelectedValue);
-                SqlDataAdapter da1 = new SqlDataAdapter(cmd1);
-                DataTable dt1 = new DataTable();
-                da1.Fill(dt1);
-                MessageBox.Show("Uspesno prijavljen");
-            }
-            catch (Exception)
-            {
-
-                MessageBox.Show("Doslo je do greske");
-            }
-        }
-
-        private void popuniUDgv()
-        {
-            SqlCommand cmd = new SqlCommand("select k.KategorijaID as 'Sifra', k.Naziv as 'Naziv Kategorije',COUNT(*) as 'Broj pasa' from Rezultat as r, Kategorija as k where r.KategorijaID=r.KategorijaID and IzlozbaID=@Izlozba group by k.KategorijaID, k.Naziv", conn);
-            cmd.Parameters.AddWithValue("@Izlozba", comboBoxizlozba1.SelectedValue);
-            SqlDataAdapter da = new SqlDataAdapter(cmd);
-            DataTable dt = new DataTable();
-            try
-            {
-                da.Fill(dt);
+                adapter.Fill(dt);
                 dataGridView1.DataSource = dt;
                 chart1.DataSource = dt;
-                chart1.Series[0].XValueMember = "Naziv Kategorije";
-                chart1.Series[0].YValueMembers = "Broj pasa";
+                chart1.Series[0].XValueMember = "Naziv_Kategorije";
+                chart1.Series[0].YValueMembers = "BrojPasa";
                 chart1.Series[0].IsValueShownAsLabel = true;
-
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                MessageBox.Show("doslo je do greske");
+                MessageBox.Show("Greska: " + ex.Message);
             }
             finally
             {
-                da.Dispose();
+                conn.Close();
                 cmd.Dispose();
+                adapter.Dispose();
             }
-        }
-        private void popuniLabele()
-        {
-            SqlCommand cmd1 = new SqlCommand("select count(*) from Rezultat where IzlozbaID=@Izlozba", conn);
-            SqlCommand cmd2 = new SqlCommand("select count(*) from Rezultat where IzlozbaID=@Izlozba and LEN(Napomena)>0", conn);
-            cmd1.Parameters.AddWithValue("@Izlozba", comboBoxizlozba1.SelectedValue);
-            cmd2.Parameters.AddWithValue("@Izlozba", comboBoxizlozba1.SelectedValue);
+
+            string sql1 = "SELECT COUNT(*) FROM Rezultat WHERE IzlozbaID = @izlId";
+            string sql2 = "SELECT COUNT(*) FROM Rezultat WHERE IzlozbaID = @izlId AND LEN(Napomena)>0";
+            SqlCommand cmd1 = new SqlCommand(sql1, conn);
+            cmd1.Parameters.AddWithValue("@izlId", comboBoxIzlozba2.SelectedValue);
+            SqlCommand cmd2 = new SqlCommand(sql2, conn);
+            cmd2.Parameters.AddWithValue("@izlId", comboBoxIzlozba2.SelectedValue);
             try
             {
                 conn.Open();
@@ -226,28 +208,184 @@ namespace BLOKA16
             }
             catch (Exception)
             {
-
-
-                MessageBox.Show("doslo je do greske");
+                MessageBox.Show("Doslo je do greške:");
+                return;
             }
             finally
             {
                 conn.Close();
             }
-
-        }
-        private void buttonPrikazi_Click(object sender, EventArgs e)
-        {
-
-            popuniLabele();
-            popuniUDgv();
-
         }
 
         private void tabControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (tabControl1.SelectedIndex == 3)
+            if (tabControl1.SelectedIndex == 0)
+                PopuniComboKategorija();
+            if (tabControl1.SelectedIndex == 4)
                 this.Close();
         }
+
+        private void dataGridView1_SelectionChanged(object sender, EventArgs e)
+        {
+            int katID = 0;
+            if (dataGridView1.SelectedRows.Count == 0)
+                return;
+            katID = (int)dataGridView1.SelectedRows[0].Cells[0].Value;
+            string sqlProvera = "SELECT Rezultat.PasID,Pas.Ime " +
+                "FROM Rezultat, Pas " +
+                "WHERE IzlozbaID=@Izlozba " +
+                "AND Rezultat.PasID=Pas.PasID " +
+                "AND Rezultat.KategorijaID=@kategID";
+            SqlCommand cmdProvera = new SqlCommand(sqlProvera, conn);
+            cmdProvera.Parameters.AddWithValue("@Izlozba", comboBoxIzlozba.SelectedValue);
+            cmdProvera.Parameters.AddWithValue("@kategID", katID);
+            SqlDataAdapter dap = new SqlDataAdapter(cmdProvera);
+            DataTable dtp = new DataTable();
+            try
+            {
+                dap.Fill(dtp);
+               
+                listView1.Items.Clear();
+                foreach (DataRow red in dtp.Rows)
+                {
+                    ListViewItem elem = new ListViewItem(red[0].ToString());
+                    elem.SubItems.Add(red[1].ToString());
+                    listView1.Items.Add(elem);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Greska" + ex.Message);
+            }
+        }
+        void PopuniKategorije()
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.CommandText = "SELECT * FROM Kategorija";
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dtk = new DataTable();
+            try
+            {
+                da.Fill(dtk);
+                dataGridViewKategorije.DataSource = dtk;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Doslo je do greške: \n" + ex.Message);
+            }
+            finally
+            {
+                da.Dispose();
+                cmd.Dispose();
+            }
+        }
+
+        private void dataGridViewKategorije_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dataGridViewKategorije.SelectedRows.Count == 0)
+            {
+                textBoxIDKat.Text = "";
+                textBoxNazivKat.Text = "";
+            }
+            else
+            {
+                textBoxIDKat.Text = dataGridViewKategorije.
+                    SelectedRows[0].Cells[0].Value.ToString();
+                textBoxNazivKat.Text = dataGridViewKategorije.
+                    SelectedRows[0].Cells[1].Value.ToString();
+            }
+        }
+
+        private void buttonDodaj_Click(object sender, EventArgs e)
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.CommandText = "INSERT INTO Kategorija " +
+                "VALUES (@idKat,@nazKat)";
+            cmd.Parameters.AddWithValue
+                ("@idKat", Convert.ToInt32(textBoxIDKat.Text));
+            cmd.Parameters.AddWithValue
+                ("@nazKat", textBoxNazivKat.Text);
+            try
+            {
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                PopuniKategorije();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Doslo je do greške: \n" + ex.Message);
+            }
+            finally
+            {
+                conn.Close();
+                cmd.Dispose();
+            }
+        }
+
+        private void buttonObrisi_Click(object sender, EventArgs e)
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.CommandText = "DELETE FROM Kategorija " +
+                "WHERE KategorijaID=@idKat " +
+                "AND Naziv=@nazKat";
+            cmd.Parameters.AddWithValue
+                ("@idKat", Convert.ToInt32(textBoxIDKat.Text));
+            cmd.Parameters.AddWithValue
+                ("@nazKat", textBoxNazivKat.Text);
+            try
+            {
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                PopuniKategorije();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Doslo je do greške: \n" + ex.Message);
+            }
+            finally
+            {
+                conn.Close();
+                cmd.Dispose();
+            }
+        }
+
+        private void buttonIzmenaKategorije_Click(object sender, EventArgs e)
+        {
+            SqlCommand cmd = new SqlCommand();
+            cmd.Connection = conn;
+            cmd.CommandText = "UPDATE Kategorija " +
+                "SET Naziv=@nazKat " +
+                "WHERE KategorijaID=@idKat";
+            cmd.Parameters.AddWithValue
+                ("@idKat", Convert.ToInt32(textBoxIDKat.Text));
+            cmd.Parameters.AddWithValue
+                ("@nazKat", textBoxNazivKat.Text);
+            try
+            {
+                conn.Open();
+                cmd.ExecuteNonQuery();
+                PopuniKategorije();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Doslo je do greške: \n" + ex.Message);
+            }
+            finally
+            {
+                conn.Close();
+                cmd.Dispose();
+            }
+
+        }
+
+        private void buttonIzadji_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+
+        
     }
 }
